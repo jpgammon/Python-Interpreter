@@ -26,7 +26,10 @@ private:
 
 private:
     std::string readName();
-    int readInteger();
+  std::string readInteger();
+  bool isDouble(std::string s);
+  double readDouble(int readInt);
+  std::string readString();
 };
 
 #endif //EXPRINTER_TOKENIZER_HPP

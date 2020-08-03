@@ -20,8 +20,9 @@ int main(int argc, char *argv[]) {
 
     inputStream.open(argv[1], ios::in);
     if (!inputStream.is_open()) {
-        cout << "Unable top open " << argv[1] << ". Terminating...";
+        cout << "Unable to open " << argv[1] << ". Terminating...";
         perror("Error when attempting to open the input file.");
+	cout << endl;
         exit(2);
     }
 
@@ -44,6 +45,6 @@ int main(int argc, char *argv[]) {
     symTab.print();
     
     cout << endl;
-    
+
     return 0;
 }

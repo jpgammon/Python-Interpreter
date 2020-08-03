@@ -5,7 +5,7 @@
 #include <iostream>
 #include "Token.hpp"
 
-Token::Token(): _name{""}, _eof{false}, _eol{false}, _symbol{'\0'}, _isWholeNumber{false}, _relationalOp{""} {}
+Token::Token(): _name{""}, _eof{false}, _eol{false}, _symbol{'\0'}, _isWholeNumber{false}, _isDoubleValue{false}, _isStringValue{false}, _relationalOp{""} {}
 
 void Token::print() const {
     if( eol() ) std::cout << "EOL\n" ;
@@ -23,6 +23,13 @@ void Token::print() const {
     else if( isDivisionOperator() )  std::cout << " / " ;
     else if( isName() )  std::cout << getName();
     else if( isWholeNumber() ) std::cout << getWholeNumber();
+    else if( isDoubleValue() ) std::cout << getDoubleValue();
+    else if( isStringValue() ) std::cout << getStringValue();
+    
+    //Misc
+    else if( isPoundSign() ) std::cout << " # " ;
+    else if( isDecimalPoint() ) std::cout << " . " ;
+    else if( isComma() ) std::cout << " , " ; 
 
     //Relational Operators
     else if ( isEquivalent() ) std::cout << " == " ;

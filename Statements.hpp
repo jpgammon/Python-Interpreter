@@ -8,6 +8,7 @@
 #include <iostream>
 #include <vector>
 
+#include "TypeDescriptor.hpp"
 #include "ArithExpr.hpp"
 #include "SymTab.hpp"
 
@@ -41,13 +42,10 @@ public:
   
 private:
     std::vector<Statement *> _statements;
-  //For for loops
-  // std::vector<Statement *> _forStatements;
 };
 
 // AssignmentStatement represents the notion of an lValue having been assigned an rValue.
 // The rValue is an expression.
-
 class AssignmentStatement : public Statement {
 public:
     AssignmentStatement();
@@ -68,16 +66,14 @@ private:
 //For print statements
 class PrintStatement : public Statement {
 public:
-  PrintStatement();
-  PrintStatement(std::string var);
-
-  std::string &var();
-
+  PrintStatement(std::vector<ExprNode *> testList);
+  
   virtual void evaluate(SymTab &symTab);
   virtual void print();
 
 private:
-  std::string _variable;
+  std::vector<ExprNode *> _testList;
+
 };
 
 //For for loops

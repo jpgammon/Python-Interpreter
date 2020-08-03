@@ -3,6 +3,7 @@
 //
 
 #include "Statements.hpp"
+#include <vector>
 
 // Statement
 Statement::Statement() {}
@@ -26,12 +27,11 @@ void Statements::evaluate(SymTab &symTab) {
 // AssignmentStatement
 
 AssignmentStatement::AssignmentStatement() : _lhsVariable{""}, _rhsExpression{nullptr} {}
-
 AssignmentStatement::AssignmentStatement(std::string lhsVar, ExprNode *rhsExpr):
         _lhsVariable{lhsVar}, _rhsExpression{rhsExpr} {}
 
 void AssignmentStatement::evaluate(SymTab &symTab) {
-    int rhs = rhsExpression()->evaluate(symTab);
+    TypeDescriptor *rhs = rhsExpression()->evaluate(symTab);
     symTab.setValueFor(lhsVariable(), rhs);
 }
 
@@ -51,20 +51,75 @@ void AssignmentStatement::print() {
 
 
 // Print Statement
-PrintStatement::PrintStatement() : _variable(""){}
-PrintStatement::PrintStatement(std::string var):_variable(var) {}
-
-std::string &PrintStatement::var(){
-  return _variable;
-}
+PrintStatement::PrintStatement(std::vector<ExprNode *> testList){
+  for (int i = 0; i < testList.size(); i++)
+    _testList.push_back(testList[i]);
+};
 
 void PrintStatement::evaluate(SymTab &symTab){
-  std::cout << symTab.getValueFor(_variable) << std::endl;
+
+  std::vector<TypeDescriptor *> printList;
+
+  if (_testList.size() == 0){
+    std::cout << "PrintStatement::evaluate: No Value" << std::endl;
+  }
+  else{
+    for (int i = 0; i < _testList.size(); i++){
+      TypeDescriptor * _testExpr = _testList[i]->evaluate(symTab);
+      if (_testExpr->type() == TypeDescriptor::INTEGER){
+	IntegerDescriptor *_testExprType = dynamic_cast<IntegerDescriptor *>(_testExpr);
+	std::cout << "PrintStatement::evaluate: " << _testExprType->getIntValue() << std::endl;
+	printList.push_back(_testExpr);
+      }
+      else if (_testExpr->type() == TypeDescriptor::DOUBLE){
+	DoubleDescriptor *_testExprType = dynamic_cast<DoubleDescriptor *>(_testExpr);
+	std::cout << "PrintStatement::evaluate: " << _testExprType->getDoubleValue() << std::endl;
+	printList.push_back(_testExpr);
+      }
+      else if (_testExpr->type() == TypeDescriptor::STRING){
+	StringDescriptor *_testExprType = dynamic_cast<StringDescriptor *>(_testExpr);
+	std::cout << "PrintStatement::evaluate: " << _testExprType->getStringValue() << std::endl;
+	printList.push_back(_testExpr);
+      }
+      else{
+	std::cout << "Invalid type" << std::endl;
+	exit(2);
+      }
+    }
+    std::cout << "PrintStatement::evaluate:PrintOutput: ";
+    for (int j = 0; j < printList.size(); j++){
+      if (printList[j]->type() == TypeDescriptor::INTEGER){
+	IntegerDescriptor *_testExprType = dynamic_cast<IntegerDescriptor *>(printList[j]);
+	std::cout << _testExprType->getIntValue() << " ";
+      }
+      else if (printList[j]->type() == TypeDescriptor::DOUBLE){
+	DoubleDescriptor *_testExprType = dynamic_cast<DoubleDescriptor *>(printList[j]);
+	std::cout << _testExprType->getDoubleValue() << " ";
+      }
+      else {
+	StringDescriptor *_testExprType = dynamic_cast<StringDescriptor *>(printList[j]);
+	std::cout << _testExprType->getStringValue() << " ";
+      }   
+    }
+    std::cout << std::endl;
+  }
 }
 
 void PrintStatement::print(){
-  std::cout << "print " << _variable << std::endl;
+
+  if (_testList.size() == 0)
+    std::cout << "print" << std::endl;
+  else{
+    std::cout << "print ";
+    for (int i = 0; i < _testList.size()-1; i++){
+      _testList[i]->print();
+      std::cout << ", "; 
+    }
+    _testList[_testList.size()-1]->print();
+    std::cout << std::endl;
+  }
 }
+
 
 // For Loop Statement
 ForStatement::ForStatement() : _leftAssignStmt{nullptr}, _relationalForStmt{nullptr},
@@ -75,10 +130,17 @@ ForStatement::ForStatement(AssignmentStatement *leftAssignStmt, ExprNode *relati
   _rightAssignStmt{rightAssignStmt}, _forLoopStmts{forLoopStmts} {}
 
 void ForStatement::evaluate(SymTab &symTab){
+  
   _leftAssignStmt->evaluate(symTab);
-  while (_relationalForStmt->evaluate(symTab)){
-    _forLoopStmts->evaluate(symTab);
+
+  TypeDescriptor *_typeDescRelational = _relationalForStmt->evaluate(symTab);
+  IntegerDescriptor *_relationalTypeDesc = dynamic_cast<IntegerDescriptor *>(_typeDescRelational);
+  
+  while (_relationalTypeDesc->getIntValue()){
     _rightAssignStmt->evaluate(symTab);
+    _forLoopStmts->evaluate(symTab);
+    _typeDescRelational = _relationalForStmt->evaluate(symTab);
+    _relationalTypeDesc = dynamic_cast<IntegerDescriptor *> (_typeDescRelational);
   }
 }
 

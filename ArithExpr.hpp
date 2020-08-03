@@ -7,6 +7,7 @@
 
 #include "Token.hpp"
 #include "SymTab.hpp"
+#include "TypeDescriptor.hpp"
 
 // Classes in this file define the internal representation of arithmetic expressions.
 
@@ -16,10 +17,10 @@
 // evaluate.
 class ExprNode {
 public:
-    ExprNode(Token token);
-    Token token();
-    virtual void print() = 0;
-    virtual int evaluate(SymTab &symTab) = 0;
+  ExprNode(Token token);
+  Token token();
+  virtual void print() = 0;
+  virtual TypeDescriptor *evaluate(SymTab &symTab) = 0;
 
 private:
     Token _token;
@@ -30,13 +31,13 @@ private:
 class InfixExprNode: public ExprNode {  // An expression tree node.
 
 public:
-    InfixExprNode(Token tk);
+  InfixExprNode(Token tk);
 
-    ExprNode *&left();
-    ExprNode *&right();
-    virtual void print();
-    virtual int evaluate(SymTab &symTab);
-  //  virtual bool evaluateRelational(SymTab &symTab);
+  ExprNode *&left();
+  ExprNode *&right();
+  virtual void print();
+  virtual TypeDescriptor *evaluate(SymTab &symTab);
+
 
 private:
     ExprNode *_left, *_right;
@@ -46,11 +47,12 @@ private:
 // a terminal in the production rules of the grammar that describes the
 // syntax of arithmetic expressions.
 
-class WholeNumber: public ExprNode {
+class Integer: public ExprNode {
 public:
-    WholeNumber(Token token);
-    virtual void print();
-    virtual int evaluate(SymTab &symTab);
+  Integer(Token token);
+  virtual void print();
+  virtual TypeDescriptor *evaluate(SymTab &symTab);
+
 };
 
 // Varialbe is a leaf-node in an expression tree. It corresponds to
@@ -59,9 +61,26 @@ public:
 
 class Variable: public ExprNode {
 public:
-    Variable(Token token);
-    virtual void print();
-    virtual int evaluate(SymTab &symTab);
+  Variable(Token token);
+  virtual void print();
+  virtual TypeDescriptor *evaluate(SymTab &symTab);
+
+};
+
+//DOUBLE
+class Double: public ExprNode{
+public:
+  Double(Token token);
+  virtual void print();
+  virtual TypeDescriptor *evaluate(SymTab &symTab);
+};
+
+//STRING
+class String: public ExprNode{
+public:
+  String(Token token);
+  virtual void print();
+  virtual TypeDescriptor *evaluate(SymTab &symTab);
 };
 
 #endif //EXPRINTER_ARITHEXPR_HPP
