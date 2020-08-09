@@ -8,24 +8,27 @@
 
 #include <fstream>
 #include <vector>
+#include <stack>
 #include "Token.hpp"
 
 class Tokenizer {
 
 public:
-    Tokenizer(std::ifstream &inStream);
-    Token getToken();
-    void ungetToken();
-    void printProcessedTokens();
+  Tokenizer(std::ifstream &inStream);
+  Token getToken();
+  void ungetToken();
+  void printProcessedTokens();
+  
+private:
+  Token lastToken;
+  bool ungottenToken;
+  std::ifstream &inStream;
+  std::vector<Token> _tokens;
+  std::stack<int> indentS;
+  bool parsingANewLine;
 
 private:
-    Token lastToken;
-    bool ungottenToken;
-    std::ifstream &inStream;
-    std::vector<Token> _tokens; 
-
-private:
-    std::string readName();
+  std::string readName();
   std::string readInteger();
   bool isDouble(std::string s);
   double readDouble(int readInt);

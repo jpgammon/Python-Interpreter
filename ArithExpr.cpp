@@ -21,10 +21,23 @@ ExprNode *&InfixExprNode::right() { return _right; }
 //int InfixExprNode::evaluate(SymTab &symTab) {
 TypeDescriptor *InfixExprNode::evaluate(SymTab &symTab){
 
-    // Evaluates an infix expression using a post-order traversal of the expression tree.
-    TypeDescriptor *l = left()->evaluate(symTab);
-    TypeDescriptor *r = right()->evaluate(symTab);
+  TypeDescriptor *r; TypeDescriptor *l;
+  // Evaluates an infix expression using a post-order traversal of the expression tree.
+  if (left() == nullptr){
+    r = right()->evaluate(symTab);
+    if (r->type() == TypeDescriptor::INTEGER) {
+        IntegerDescriptor *rightInt = dynamic_cast<IntegerDescriptor *> (r);
+        int rValue = rightInt->getIntValue();
+        std::cout << "InfixExprNode::evaluate: not " << rValue << std::endl;
+        if (token().isNotOperator())
+          return new IntegerDescriptor(TypeDescriptor::INTEGER, not rValue);
+    }
+  }
     
+  else{
+    l = left()->evaluate(symTab);
+    r = right()->evaluate(symTab);
+  }
     //HANDLES leftSTRING TO rightSTRING EVALUATIONS   
     if (l->type() == TypeDescriptor::STRING && r->type() == TypeDescriptor::STRING) {
         StringDescriptor *leftString = dynamic_cast<StringDescriptor *> (l);
@@ -48,7 +61,9 @@ TypeDescriptor *InfixExprNode::evaluate(SymTab &symTab){
             return new IntegerDescriptor(TypeDescriptor::INTEGER,lValue == rValue);
         else if (token().isNotEquivalent())
             return new IntegerDescriptor(TypeDescriptor::INTEGER,lValue != rValue);
-
+	else if (token().isNotEquivalent2())
+          return new IntegerDescriptor(TypeDescriptor::INTEGER,lValue != rValue);
+		
         else {
             std::cout << "InfixExprNode::evaluate: don't know how to evaluate this operator\n";
             token().print();
@@ -108,7 +123,8 @@ TypeDescriptor *InfixExprNode::evaluate(SymTab &symTab){
       DoubleDescriptor *rightDouble = dynamic_cast<DoubleDescriptor *> (r);
       int lValue = leftInteger->getIntValue();
       double rValue = rightDouble->getDoubleValue();
-    
+
+      //token().symbol() problem area
      std::cout << "InfixExprNode::evaluate: " << lValue << " " << token().symbol() << " " << rValue << std::endl;
         if (token().isAdditionOperator())
             return new DoubleDescriptor(TypeDescriptor::DOUBLE,lValue + rValue);
@@ -133,6 +149,15 @@ TypeDescriptor *InfixExprNode::evaluate(SymTab &symTab){
             return new IntegerDescriptor(TypeDescriptor::INTEGER,lValue == rValue);
         else if (token().isNotEquivalent())
             return new IntegerDescriptor(TypeDescriptor::INTEGER,lValue != rValue);
+	else if (token().isNotEquivalent2())
+	  return new IntegerDescriptor(TypeDescriptor::INTEGER,lValue != rValue);
+	 //Logical
+        else if (token().isAndOperator())
+          return new IntegerDescriptor(TypeDescriptor::INTEGER,lValue && rValue);
+        else if (token().isOrOperator())
+          return new IntegerDescriptor(TypeDescriptor::INTEGER,lValue || rValue);
+        else if (token().isNotOperator())
+          return new IntegerDescriptor(TypeDescriptor::INTEGER, not rValue);
 
         else {
             std::cout << "InfixExprNode::evaluate: don't know how to evaluate this operator\n";
@@ -173,6 +198,15 @@ TypeDescriptor *InfixExprNode::evaluate(SymTab &symTab){
             return new IntegerDescriptor(TypeDescriptor::INTEGER,lValue == rValue);
         else if (token().isNotEquivalent())
             return new IntegerDescriptor(TypeDescriptor::INTEGER,lValue != rValue);
+	else if (token().isNotEquivalent2())
+          return new IntegerDescriptor(TypeDescriptor::INTEGER,lValue != rValue);
+	 //Logical
+        else if (token().isAndOperator())
+          return new IntegerDescriptor(TypeDescriptor::INTEGER,lValue && rValue);
+        else if (token().isOrOperator())
+          return new IntegerDescriptor(TypeDescriptor::INTEGER,lValue || rValue);
+        else if (token().isNotOperator())
+          return new IntegerDescriptor(TypeDescriptor::INTEGER, not rValue);
 
         else {
             std::cout << "InfixExprNode::evaluate: don't know how to evaluate this operator\n";
@@ -181,7 +215,6 @@ TypeDescriptor *InfixExprNode::evaluate(SymTab &symTab){
             exit(2);
         }
       }
-
       
     //HANDLES leftDOUBLE TO rightDOUBLE EVALUATIONS
     else if (l->type() == TypeDescriptor::DOUBLE && r->type() == TypeDescriptor::DOUBLE) {
@@ -214,7 +247,16 @@ TypeDescriptor *InfixExprNode::evaluate(SymTab &symTab){
             return new IntegerDescriptor(TypeDescriptor::INTEGER,lValue == rValue);
         else if (token().isNotEquivalent())
             return new IntegerDescriptor(TypeDescriptor::INTEGER,lValue != rValue);
-
+	else if (token().isNotEquivalent2())
+          return new IntegerDescriptor(TypeDescriptor::INTEGER,lValue != rValue);
+	 //Logical
+        else if (token().isAndOperator())
+          return new IntegerDescriptor(TypeDescriptor::INTEGER,lValue && rValue);
+        else if (token().isOrOperator())
+          return new IntegerDescriptor(TypeDescriptor::INTEGER,lValue || rValue);
+        else if (token().isNotOperator())
+          return new IntegerDescriptor(TypeDescriptor::INTEGER, not rValue);
+	
         else {
             std::cout << "InfixExprNode::evaluate: don't know how to evaluate this operator\n";
             token().print();
@@ -226,11 +268,11 @@ TypeDescriptor *InfixExprNode::evaluate(SymTab &symTab){
 
     //HANDLES leftINT TO rightINT EVALUATIONS
     else if (l->type() == TypeDescriptor::INTEGER && r->type() == TypeDescriptor::INTEGER) {
+
         IntegerDescriptor *leftInt = dynamic_cast<IntegerDescriptor *> (l);
         IntegerDescriptor *rightInt = dynamic_cast<IntegerDescriptor *> (r);
         int lValue = leftInt->getIntValue();
         int rValue = rightInt->getIntValue();
-
         std::cout << "InfixExprNode::evaluate: " << lValue << " " << token().symbol() << " " << rValue << std::endl;
         if (token().isAdditionOperator())
             return new IntegerDescriptor(TypeDescriptor::INTEGER,lValue + rValue);
@@ -255,7 +297,18 @@ TypeDescriptor *InfixExprNode::evaluate(SymTab &symTab){
             return new IntegerDescriptor(TypeDescriptor::INTEGER,lValue == rValue);
         else if (token().isNotEquivalent())
             return new IntegerDescriptor(TypeDescriptor::INTEGER,lValue != rValue);
-
+	else if (token().isNotEquivalent2())
+          return new IntegerDescriptor(TypeDescriptor::INTEGER,lValue != rValue);
+	//Logical
+	else if (token().isAndOperator())
+	  return new IntegerDescriptor(TypeDescriptor::INTEGER,lValue && rValue);
+	else if (token().isOrOperator())
+          return new IntegerDescriptor(TypeDescriptor::INTEGER,lValue || rValue);
+	else if (token().isNotOperator()){
+	  std::cout << "TEST" << std::endl;
+          return new IntegerDescriptor(TypeDescriptor::INTEGER, not rValue);
+	}
+	
         else {
             std::cout << "InfixExprNode::evaluate: don't know how to evaluate this operator\n";
             token().print();
@@ -273,9 +326,15 @@ TypeDescriptor *InfixExprNode::evaluate(SymTab &symTab){
 }
 
 void InfixExprNode::print() {
+  if (_left == nullptr){
+    token().print();
+    _right->print();
+  }
+  else{
     _left->print();
     token().print();
     _right->print();
+  }
 }
 
 // WholeNumber -- token has the number in it. Returns the number
@@ -285,7 +344,6 @@ void Integer::print() {
     token().print();
 }
 
-//int WholeNumber::evaluate(SymTab &symTab) {
 TypeDescriptor *Integer::evaluate(SymTab &symTab) {
 
   std::cout << "Integer::evaluate: returning " << token().getWholeNumber() << std::endl;

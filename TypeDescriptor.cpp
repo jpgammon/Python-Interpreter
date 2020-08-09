@@ -17,6 +17,11 @@ int IntegerDescriptor::getIntValue() {
     return  _intValue;
 }
 
+int IntegerDescriptor::setIntValue(int set) {
+  _intValue = set;
+  return _intValue;
+}
+
 //DOUBLES
 DoubleDescriptor::DoubleDescriptor(TypeDescriptor::types descType, double doubleValue): TypeDescriptor{descType} , _doubleValue{doubleValue} {}
 

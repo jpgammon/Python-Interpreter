@@ -37,11 +37,11 @@ public:
 
     void addStatement(Statement *statement);
     void evaluate(SymTab &symTab);
-
+    int size();
     void print();
   
 private:
-    std::vector<Statement *> _statements;
+  std::vector<Statement *> _statements;
 };
 
 // AssignmentStatement represents the notion of an lValue having been assigned an rValue.
@@ -63,6 +63,27 @@ private:
     ExprNode *_rhsExpression;
 };
 
+//For if, else, elif statements
+class IfStatement : public Statement {
+public:
+  // IfStatement();
+  IfStatement(ExprNode *ifExpr, Statements *ifStmts, Statements *elseStmts,
+	      std::vector<ExprNode *> elifExprs, std::vector<Statements *> elifStmts, bool elseStmtsBool);
+
+  ExprNode *&ifExpr();
+
+  virtual void evaluate(SymTab &symTab);
+  virtual void print();
+
+private:
+  ExprNode *_ifExpr;
+  Statements *_ifStmts;
+  Statements *_elseStmts;
+  std::vector<ExprNode *> _elifExprs;
+  std::vector<Statements *> _elifStmts;
+  bool _elseStmtsBool;
+};
+
 //For print statements
 class PrintStatement : public Statement {
 public:
@@ -79,17 +100,15 @@ private:
 //For for loops
 class ForStatement : public Statement {
 public:
-  ForStatement();
-  ForStatement(AssignmentStatement *leftAssignStmt, ExprNode *relationalForStmt, AssignmentStatement *rightAssignStmt, Statements *forLoopStmts);
+  ForStatement(std::string varName, std::vector<ExprNode *> rangeList, Statements *forStmts);
 
   virtual void evaluate(SymTab &symTab);
   virtual void print();
 
 private:
-  AssignmentStatement *_leftAssignStmt;
-  ExprNode *_relationalForStmt;
-  AssignmentStatement *_rightAssignStmt;
-  Statements *_forLoopStmts;
+  std::string _varName;
+  std::vector<ExprNode *> _rangeList;
+  Statements *_forStmts;
 };
 
 #endif //EXPRINTER_STATEMENTS_HPP

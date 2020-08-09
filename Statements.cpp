@@ -9,8 +9,8 @@
 Statement::Statement() {}
 
 // Statements
-
 Statements::Statements() {}
+
 void Statements::addStatement(Statement *statement) { _statements.push_back(statement); }
 
 void Statements::print() {
@@ -24,8 +24,11 @@ void Statements::evaluate(SymTab &symTab) {
         s->evaluate(symTab);
 }
 
-// AssignmentStatement
+int Statements::size(){
+  return _statements.size();
+}
 
+// AssignmentStatement
 AssignmentStatement::AssignmentStatement() : _lhsVariable{""}, _rhsExpression{nullptr} {}
 AssignmentStatement::AssignmentStatement(std::string lhsVar, ExprNode *rhsExpr):
         _lhsVariable{lhsVar}, _rhsExpression{rhsExpr} {}
@@ -49,6 +52,75 @@ void AssignmentStatement::print() {
     std::cout << std::endl;
 }
 
+// IF STATEMENTS
+IfStatement::IfStatement(ExprNode *ifExpr, Statements *ifStmts, Statements *elseStmts,
+			 std::vector<ExprNode *> elifExprs, std::vector<Statements *> elifStmts, bool elseStmtsBool){
+  _ifExpr = ifExpr;
+  _ifStmts = ifStmts;
+  _elseStmts = elseStmts;
+  _elseStmtsBool = elseStmtsBool;
+
+  for (int i = 0; i < elifExprs.size(); i++)
+    _elifExprs.push_back(elifExprs[i]);
+
+  for (int j = 0; j < elifStmts.size(); j++)
+    _elifStmts.push_back(elifStmts[j]);
+}
+	
+ExprNode *&IfStatement::ifExpr(){
+  return _ifExpr;
+}
+
+void IfStatement::evaluate(SymTab &symTab){
+
+  bool elifTest = 0;
+  //If Statements evaluation
+  TypeDescriptor *_ifTypeDesc = _ifExpr->evaluate(symTab);
+  IntegerDescriptor *_ifExprTypeDesc = dynamic_cast<IntegerDescriptor *>(_ifTypeDesc);
+
+  if (_ifExprTypeDesc->getIntValue()){
+    elifTest = 1;
+    _ifStmts->evaluate(symTab);
+  }
+
+  //Elif Statement evaluation
+  else if (_elifExprs.size() > 0){
+    for (int i = 0; i < _elifExprs.size(); i++){
+      TypeDescriptor *_elifTypeDesc = _elifExprs[i]->evaluate(symTab);
+      IntegerDescriptor *_elifExprTypeDesc = dynamic_cast<IntegerDescriptor *>(_elifTypeDesc);
+      if (_elifExprTypeDesc->getIntValue()){
+	_elifStmts[i]->evaluate(symTab);
+	elifTest = 1;
+	break;
+      }
+    }
+  }
+    
+  //Else Statement evaluation
+  if (!elifTest && _elseStmts->size() > 0)
+      _elseStmts->evaluate(symTab);
+}
+
+void IfStatement::print(){
+  std::cout << "if ";
+  _ifExpr->print();
+  std::cout << ":" << std::endl;
+  _ifStmts->print();
+
+  if (_elifExprs.size() > 0){
+    for (int i = 0; i < _elifExprs.size(); i++){
+      std::cout << "elif ";
+      _elifExprs[i]->print();
+      std::cout << ":" << std::endl;
+      _elifStmts[i]->print();
+    }
+  }
+  
+  if (_elseStmtsBool){
+    std::cout << "else: " << std::endl;
+    _elseStmts->print();
+  }
+}
 
 // Print Statement
 PrintStatement::PrintStatement(std::vector<ExprNode *> testList){
@@ -120,43 +192,83 @@ void PrintStatement::print(){
   }
 }
 
-
-// For Loop Statement
-ForStatement::ForStatement() : _leftAssignStmt{nullptr}, _relationalForStmt{nullptr},
-			       _rightAssignStmt{nullptr}, _forLoopStmts{nullptr} {}
-ForStatement::ForStatement(AssignmentStatement *leftAssignStmt, ExprNode *relationalForStmt,
-			   AssignmentStatement *rightAssignStmt, Statements *forLoopStmts) :
-  _leftAssignStmt{leftAssignStmt}, _relationalForStmt{relationalForStmt},
-  _rightAssignStmt{rightAssignStmt}, _forLoopStmts{forLoopStmts} {}
+ForStatement::ForStatement(std::string varName, std::vector<ExprNode *>rangeList, Statements *forStmts){
+  _varName = varName;
+  _forStmts = forStmts;
+  for (int i = 0; i < rangeList.size(); i++)
+    _rangeList.push_back(rangeList[i]);
+}
 
 void ForStatement::evaluate(SymTab &symTab){
-  
-  _leftAssignStmt->evaluate(symTab);
 
-  TypeDescriptor *_typeDescRelational = _relationalForStmt->evaluate(symTab);
-  IntegerDescriptor *_relationalTypeDesc = dynamic_cast<IntegerDescriptor *>(_typeDescRelational);
-  
-  while (_relationalTypeDesc->getIntValue()){
-    _rightAssignStmt->evaluate(symTab);
-    _forLoopStmts->evaluate(symTab);
-    _typeDescRelational = _relationalForStmt->evaluate(symTab);
-    _relationalTypeDesc = dynamic_cast<IntegerDescriptor *> (_typeDescRelational);
+  TypeDescriptor *rListInit; TypeDescriptor *rListVar; TypeDescriptor *rListRange; TypeDescriptor *rListStep;
+  IntegerDescriptor *intInit; IntegerDescriptor *intVar; IntegerDescriptor *intRange; IntegerDescriptor *intStep;
+
+  if (_rangeList.size() == 1){
+
+    rListRange = _rangeList[0]->evaluate(symTab);
+    intRange = dynamic_cast<IntegerDescriptor *> (rListRange);
+    
+    intVar = new IntegerDescriptor(TypeDescriptor::INTEGER, 0);
+    symTab.setValueFor(_varName, intVar);
+    
+    for (int i = 0; i < intRange->getIntValue(); i++){
+      _forStmts->evaluate(symTab);
+      if (i+1 != intRange->getIntValue())
+	symTab.setValueFor(_varName, intVar = new IntegerDescriptor(TypeDescriptor::INTEGER, i+1));
+    }
+  }
+
+  //Undefined varName for range(x, y)
+  else if (_rangeList.size() == 2){
+    //Init value passed in
+    rListInit = _rangeList[0]->evaluate(symTab);
+    intInit = dynamic_cast<IntegerDescriptor *> (rListInit);
+    //Range value passed in
+    rListRange = _rangeList[1]->evaluate(symTab);
+    intRange = dynamic_cast<IntegerDescriptor *> (rListRange);
+      
+    symTab.setValueFor(_varName, intInit);
+    for (int i = intInit->getIntValue(); i < intRange->getIntValue(); i++){
+      _forStmts->evaluate(symTab);
+      if (i+1 != intRange->getIntValue())
+	symTab.setValueFor(_varName, intVar = new IntegerDescriptor(TypeDescriptor::INTEGER, i+1));
+    }
+  } 
+    
+  else if (_rangeList.size() == 3){
+
+    //Init value passed in
+    rListInit = _rangeList[0]->evaluate(symTab);
+    intInit = dynamic_cast<IntegerDescriptor *> (rListInit);
+    //Range value passed in
+    rListRange = _rangeList[1]->evaluate(symTab);
+    intRange = dynamic_cast<IntegerDescriptor *> (rListRange);
+    //Step value passed in
+    rListStep = _rangeList[2]->evaluate(symTab);
+    intStep = dynamic_cast<IntegerDescriptor *> (rListStep);
+
+    symTab.setValueFor(_varName, intInit);
+    for (int i = intInit->getIntValue(); i < intRange->getIntValue(); i += intStep->getIntValue()){
+      _forStmts->evaluate(symTab);
+      if(i+1 != intRange->getIntValue())
+	symTab.setValueFor(_varName, intVar = new IntegerDescriptor(TypeDescriptor::INTEGER, i + intStep->getIntValue()));
+    }
+  }
+
+  else{
+    std::cout << "Invalid use of For Statement" << std::endl;
+    exit(2);
   }
 }
 
 void ForStatement::print(){
-  std::cout << "for(" << _leftAssignStmt->lhsVariable() << " = ";
-  _leftAssignStmt->rhsExpression()->print();
-  std::cout << "; ";
-  _relationalForStmt->print();
-  std::cout << "; ";
-  std::cout << _rightAssignStmt->lhsVariable() << " = ";
-  _rightAssignStmt->rhsExpression()->print();
-  std::cout << ") {" << std::endl;
-  _forLoopStmts->print();
-  std::cout << "}" << std::endl;
-
-
+  std::cout << "for " << _varName << " in range(";
+  for (int i = 0; i < _rangeList.size()-1; i++){
+    _rangeList[i]->print();
+    std::cout << ", ";
+  }
+  _rangeList[_rangeList.size()-1]->print();
+  std::cout << "):" << std::endl;
+  _forStmts -> print(); 
 }
-
-

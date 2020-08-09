@@ -26,6 +26,7 @@ public:
 
   IntegerDescriptor(types descType, int intValue);
   int getIntValue();
+  int setIntValue(int set);
 
 private:
     int _intValue;
